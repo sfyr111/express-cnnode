@@ -9,6 +9,7 @@ var stylus = require('stylus');
 var index = require('./routes/index');
 var users = require('./routes/user');
 var topicRouter = require('./routes/topic');
+require('./services/mongoose_service')
 
 var app = express();
 
