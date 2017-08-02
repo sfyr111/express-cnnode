@@ -1,5 +1,5 @@
 const mongoose = require('mongoose')
-const uri = 'mongodb://localhost:27017/express-connode'
+const uri = 'mongodb://localhost:27017/express-cnnode'
 
 mongoose.Promise = global.Promise
 

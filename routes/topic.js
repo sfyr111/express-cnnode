@@ -1,7 +1,7 @@
 const express = require('express')
 const router = express.Router()
-const User = require('../models/in_memo/user')
-const Topic = require('../models/in_memo/topic')
+const User = require('../models/mongo/user')
+const Topic = require('../models/mongo/topic')
 
 // /topic/
 router.route('/')
@@ -45,7 +45,7 @@ router.route('/')
 router.route('/:id')
   .get((req, res, next) => {
     (async () => {
-      let topic = await Topic.getTopicsById(Number(req.params.id))
+      let topic = await Topic.getTopicsById(req.params.id)
       return {
         topic,
         code: 0
@@ -60,9 +60,8 @@ router.route('/:id')
   })
   .patch((req, res) => {
     (async () => {
-      let topic = await Topic.updateTopicById(Number(req.params.id), {
-        name: req.body.name,
-        age: req.body.age
+      let topic = await Topic.updateTopicById(req.params.id, {
+        content: req.body.content
       })
       return {
         topic,
