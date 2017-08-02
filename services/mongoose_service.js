@@ -3,7 +3,7 @@ const uri = 'mongodb://localhost:27017/express-cnnode'
 
 mongoose.Promise = global.Promise
 
-mongoose.connect(uri, { userMongoClient: true })
+mongoose.connect(uri, { useMongoClient: true })
 
 const db = mongoose.connection
 

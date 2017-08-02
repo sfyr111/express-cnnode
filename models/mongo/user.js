@@ -1,5 +1,10 @@
 const mongoose = require('mongoose')
 const Schema = mongoose.Schema
+const crypto = require('crypto')
+const util = require('util')
+const pbkdf2Async = util.promisify(crypto.pbkdf2)
+const SALT = require('../../cipher').PASSWORD_SALT
+// const SECRET = require('../../cipher').JWT_SECRET
 
 const UserSchema = new Schema({
   name: {
@@ -9,40 +14,36 @@ const UserSchema = new Schema({
   age: {
     type: Number,
     max: [90, 'Nobody over 90 could use postman`']
-  }
+  },
+  phoneNumber: {
+    type: String,
+    required: true
+  },
+  password: String
 })
 
 UserSchema.index({ name: 1 }, { unique: true }) // 创建唯一索引
-// UserSchema.index({ name: 1, age: 1 }) // 混合索引，1正序，-1倒序，空间换时间
+UserSchema.index({ name: 1, age: 1 })
 
-/* 
-非常快-非常慢
-内存->遍历文档
-
-非常快-比较快-  比较快
-内存->寻找索引->根据索引取文档 
-
-只取name和age
-内存->寻找索引
-
-稀疏索引，不一定要有值，效率低一点
-sparseIndex
-
-in_memory 缓存内存数据库
-
-LRU 最近访问的多少个在缓存内
-
-geoIndex 地理位置索引
-*/
+const DEFAULT_PROJECTION = { password: 0, phoneNumber: 0, __v: 0 } // 0 数据查询不显示 select()
 
 const UserModel = mongoose.model('user', UserSchema)
 
 const createANewUser = async function (params) {
   const user = new UserModel({
     name: params.name,
-    age: params.age
+    age: params.age,
+    phoneNumber: params.phoneNumber
   })
-  return await user.save()
+
+  user.password = await pbkdf2Async(params.password, SALT, 512, 128, 'sha1')
+    .then(r => r.toString())
+    .catch(e => {
+      console.log(e)
+      throw new Error('something goes wrong inside the server')
+    })
+  
+  let created = await user.save()
     .catch(e => {
       console.log(e)
       switch (e.code) {
@@ -56,10 +57,17 @@ const createANewUser = async function (params) {
         }
       }
     })
+    
+    return {
+      _id: created._id,
+      name: created.name,
+      age: created.age
+    }
 }
 
 const getUsers = async function (params = { page: 0, pageSize: 10 }) {
   let flow = UserModel.find({})
+  flow.select(DEFAULT_PROJECTION)
   flow.skip(params.page * params.pageSize) // 跳过的文档数
   flow.limit(params.pageSize)
   return await flow
@@ -71,6 +79,7 @@ const getUsers = async function (params = { page: 0, pageSize: 10 }) {
 
 const getUsersById = async function (userId) {
   return UserModel.findOne({ _id: userId })
+    .select(DEFAULT_PROJECTION) // 数据库
     .catch(e => {
       console.log(e)
       throw new Error(`error getting user by id: ${userId}`)
@@ -85,7 +94,27 @@ const updateUserById = async function (userId, update) {
     })
 }
 
+const login = async function (phoneNumber, password) {
+  password = await pbkdf2Async(password, SALT, 512, 128, 'sha1')
+    .then(r => r.toString())
+    .catch(e => {
+      console.log(e)
+      throw new Error('something goes wrong inside the server')
+    })
+
+  const user = await UserModel.findOne({ phoneNumber: phoneNumber, password: password})
+    .select(DEFAULT_PROJECTION)
+    .catch(e => {
+      console.log(`error logging in, phone ${phoneNumber}, err: ${e.stack || e}`)
+      throw new Error(`something wrong with the server`)
+    })
+
+    if (!user) throw new Error('No such user!')
+    return user
+}
+
 module.exports = {
+  login,
   getUsers,
   getUsersById,
   createANewUser,
