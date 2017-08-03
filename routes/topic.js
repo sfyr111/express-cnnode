@@ -2,6 +2,7 @@ const express = require('express')
 const router = express.Router()
 const User = require('../models/mongo/user')
 const Topic = require('../models/mongo/topic')
+const auth = require('../middlewares/auth_user')
 
 // /topic/
 router.route('/')
@@ -20,7 +21,7 @@ router.route('/')
         next(e)
       })
   })
-  .post((req, res, next) => {
+  .post(auth(), (req, res, next) => {
     (async () => {
       const user = await User.getUsersById(req.body.userId)
       let topic = await Topic.createANewTopic({
@@ -58,7 +59,7 @@ router.route('/:id')
         next(e)
       })
   })
-  .patch((req, res) => {
+  .patch(auth(), (req, res) => {
     (async () => {
       let topic = await Topic.updateTopicById(req.params.id, {
         content: req.body.content
@@ -77,7 +78,7 @@ router.route('/:id')
   })
 
   router.route('/:id/reply')
-    .post((req, res, next) => {
+    .post(auth(), (req, res, next) => {
       (async () => {
         const user = await User.getUsersById(req.body.userId)
         let topic = await Topic.replyATopic({

@@ -88,6 +88,7 @@ const getUsersById = async function (userId) {
 
 const updateUserById = async function (userId, update) {
   return await UserModel.findOneAndUpdate({ _id: userId }, update,  { new: true }) // new: true 返回修改完的数据
+    .select(DEFAULT_PROJECTION)
     .catch(e => {
       console.log(e)
       throw new Error(`error updating user by id: ${userId}`)
