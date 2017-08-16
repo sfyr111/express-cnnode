@@ -2,6 +2,9 @@ const express = require('express')
 const router = express.Router()
 const User = require('../models/mongo/user')
 const auth = require('../middlewares/auth_user')
+const multer = require('multer')
+const path = require('path')
+const upload = multer({ dest: path.join('http://ouf9z0fow.bkt.clouddn.com/image/') })
 
 // /user/
 router.route('/')
@@ -58,11 +61,12 @@ router.route('/:id')
         next(e)
       })
   })
-  .patch(auth(), (req, res, next) => {
+  .patch(auth(), upload.single('avatar'), (req, res, next) => {
     (async () => {
       let update = {}
       if (req.body.name) update.name = req.body.name
       if (req.body.age) update.age = req.body.age
+      console.log(req.file)
       let user = await User.updateUserById(req.params.id, update)
       return {
         user,

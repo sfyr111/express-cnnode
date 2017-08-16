@@ -3,6 +3,7 @@ const router = express.Router()
 const User = require('../models/mongo/user')
 const JWT = require('jsonwebtoken')
 const JWT_SECRET = require('../cipher').JWT_SECRET
+const Errors = require('../error')
 
 /* GET home page. */
 router.get('/', (req, res, next) => {
@@ -11,6 +12,9 @@ router.get('/', (req, res, next) => {
 
 router.post('/login', (req, res, next) => {
   (async () => {
+
+    if (!req.body.password) throw new Errors.ValidateionError('password', 'password can not be empty')
+
     const user = await User.login(req.body.phoneNumber, req.body.password)
     
     const token = JWT.sign({
