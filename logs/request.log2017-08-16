@@ -1,0 +1,2 @@
+{"method":"POST","query":{},"body":{"age":"63","name":"laoyang3","phoneNumber":"12345678903","password":"333333"},"ip":"::1","level":"info","message":"request","timestamp":"2017-08-16T15:32:15.621Z"}
+{"method":"POST","query":{},"body":{"age":"63","name":"laoyang3","phoneNumber":"12345678903","password":"333333"},"ip":"::1","level":"info","message":"request","timestamp":"2017-08-16T15:35:06.030Z"}

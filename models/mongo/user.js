@@ -5,6 +5,8 @@ const util = require('util')
 const pbkdf2Async = util.promisify(crypto.pbkdf2)
 const SALT = require('../../cipher').PASSWORD_SALT
 // const SECRET = require('../../cipher').JWT_SECRET
+const Errors = require('../../error')
+const logger = require('../../utils/logger').logger
 
 const UserSchema = new Schema({
   name: {
@@ -45,14 +47,14 @@ const createANewUser = async function (params) {
   
   let created = await user.save()
     .catch(e => {
-      console.log(e)
+      logger.error('error creating user', e)
       switch (e.code) {
         case 11000: {
-          throw new Error('someone has picked that name, choose an other!')
+          throw new Errors.DuplicatedUserNameError(params.name, 'someone has picked that name, choose an other!')
           break
         }
         default: {
-          throw new Error(`error creating user ${JSON.stringify(params)}. ${e.message}`)
+          throw new Errors.ValidationError('user', `error creating user ${JSON.stringify(params)}. ${e.message}`)
           break
         }
       }
@@ -100,7 +102,7 @@ const login = async function (phoneNumber, password) {
     .then(r => r.toString())
     .catch(e => {
       console.log(e)
-      throw new Error('something goes wrong inside the server')
+      throw new Errors.InternalError('something goes wrong inside the server')
     })
 
   const user = await UserModel.findOne({ phoneNumber: phoneNumber, password: password})

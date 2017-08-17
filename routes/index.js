@@ -14,7 +14,10 @@ router.post('/login', (req, res, next) => {
   (async () => {
 
     if (!req.body.password) throw new Errors.ValidateionError('password', 'password can not be empty')
-
+    if (typeof req.body.password !== 'string') throw new Errors.ValidateionError('password', 'password must be a string')
+    if (req.body.password.length < 8) throw new Errors.ValidateionError('password', 'password must longer than 8')
+    if (req.body.password.length > 32) throw new Errors.ValidateionError('password', 'password must not be longer than 32')
+      
     const user = await User.login(req.body.phoneNumber, req.body.password)
     
     const token = JWT.sign({
