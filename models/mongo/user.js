@@ -21,7 +21,12 @@ const UserSchema = new Schema({
     type: String,
     required: true
   },
-  password: String
+  password: String,
+  avatar: String,
+  openId: {
+    type: String,
+    index: true
+  }
 })
 
 UserSchema.index({ name: 1 }, { unique: true }) // 创建唯一索引
@@ -35,15 +40,18 @@ const createANewUser = async function (params) {
   const user = new UserModel({
     name: params.name,
     age: params.age,
-    phoneNumber: params.phoneNumber
+    phoneNumber: params.phoneNumber,
+    openId: params.openId
   })
 
-  user.password = await pbkdf2Async(params.password, SALT, 512, 128, 'sha1')
-    .then(r => r.toString())
-    .catch(e => {
-      console.log(e)
-      throw new Error('something goes wrong inside the server')
-    })
+  if (params.password) {
+    user.password = await pbkdf2Async(params.password, SALT, 512, 128, 'sha1')
+      .then(r => r.toString())
+      .catch(e => {
+        console.log(e)
+        throw new Error('something goes wrong inside the server')
+      })
+  }
   
   let created = await user.save()
     .catch(e => {
@@ -54,7 +62,7 @@ const createANewUser = async function (params) {
           break
         }
         default: {
-          throw new Errors.ValidationError('user', `error creating user ${JSON.stringify(params)}. ${e.message}`)
+          throw new Errors.ValidateionError('user', `error creating user ${JSON.stringify(params)}. ${e.message}`)
           break
         }
       }
@@ -116,11 +124,20 @@ const login = async function (phoneNumber, password) {
     return user
 }
 
+const loginWithWechat = async function (user) {
+  let found = await UserModel.findOne({ openId: user.openid })
+  if (found) return found
+
+  let created = await createANewUser({ name: user.nickname, openId: user.openid })
+  return created
+}
+
 module.exports = {
   login,
   getUsers,
   getUsersById,
   createANewUser,
   updateUserById,
+  loginWithWechat,
   model: UserModel
 }

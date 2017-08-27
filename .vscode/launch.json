@@ -5,6 +5,7 @@
     "type": "node",
     "request": "launch",
     "program": "${workspaceRoot}/bin/www",
+    // "program": "${workspaceRoot}/logs/jsconfig",
     "stopOnEntry": false,
     "args": [],
     "cwd": "${workspaceRoot}",

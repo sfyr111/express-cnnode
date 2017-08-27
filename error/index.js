@@ -41,9 +41,23 @@ class DuplicatedUserNameError extends BaseHTTPError {
   }
 }
 
+class WechatAPIError extends BaseHTTPError {
+  constructor (msg) {
+    super(`wechat api error: ${msg}`, 300001, 500, '微信服务调用失败')
+  }
+}
+
+class RedisError extends BaseHTTPError {
+  constructor (msg) {
+    super(`redis error: ${msg}`, 300001, 500, '服务器内部异常')
+  }
+}
+
 module.exports = {
+  RedisError,
   BaseHTTPError,
   InternalError,
+  WechatAPIError,
   ValidateionError,
   DuplicatedUserNameError
 }
